@@ -1,6 +1,4 @@
 import socket, json, time, threading
-from netifaces import AF_INET, AF_INET6, AF_LINK, AF_PACKET, AF_BRIDGE
-import netifaces as ni
 
 class ContactServer:
     def __init__(self):
