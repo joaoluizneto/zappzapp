@@ -1,0 +1,20 @@
+{
+"ChatConnectorConfig":
+    {
+        "username": "username3",
+        "clientIP": "192.168.0.2",
+        "clientPort": 12001,
+
+        "peerIP": "192.168.0.2",
+        "peerPort": 12002,
+
+        "serverIP": "192.168.0.8",
+        "serverPort": 12000
+    },
+
+"UDPPeerConfig":
+    {
+        "peerIP": "192.168.0.2",
+        "peerPort": 12002
+    }
+}
