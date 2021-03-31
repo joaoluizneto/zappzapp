@@ -1,0 +1,8 @@
+{
+    "oriusername": "username1",
+    "msgNumber":"1",
+    "chatID": "guid",
+    "senttime":"yyy-MM-dd 00:00:00",
+    "contenttype":"msg or file",
+    "content":"Hello World!"
+}

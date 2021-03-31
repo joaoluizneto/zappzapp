@@ -17,7 +17,9 @@ class app(tk.Tk):
 
 		#Adiciona menubar na aplicação
 		menubar = tk.Menu(self, font=("Verdana", "9"), background="#4682B4",fg='white', activebackground='#011C56', activeforeground='white', tearoff=1)
+		menubar.add_command(label="SubscribePage", command=lambda: self.show_frame(SubscribePage))
 		menubar.add_command(label="ChatListPage", command=lambda: self.show_frame(ChatListPage))
+		menubar.add_command(label="ChatConfigPage", command=lambda: self.show_frame(ChatConfigPage))
 		menubar.add_command(label="ChatPage", command=lambda: self.show_frame(ChatPage))
 		self.config(menu=menubar)
     
@@ -45,16 +47,13 @@ class app(tk.Tk):
 		self.show_frame(SubscribePage)
 
 	#Traz a pagina que foi adicionada no dicionário ao topo
-	def show_frame(self, page_name, objChat=None, objChatManager=None):
+	def show_frame(self, page_name, objChat=None):
 		frame, geometry = self.frames[page_name]
 		self.update_idletasks()
 		self.geometry(geometry)
 		if objChat:
 			print("Updating chat page with: "+objChat.chatName)
 			frame.setChat(objChat=objChat)
-		if objChatManager:
-			print("Creating new chat")
-			frame.setChatManager(objChatManager=objChatManager)
 		frame.tkraise()
 
 class SubscribePage(tk.Frame):					#Essa parte inicia a pagina como um Frame
@@ -102,7 +101,7 @@ class SubscribePage(tk.Frame):					#Essa parte inicia a pagina como um Frame
 		objChatConnector.setConfig(peerPort=_peerPort, username=_username, serverIP=_serverIP)
 		subscribed = objChatConnector.subscribeToServer()
 		self.labelstatus.config(text = str(subscribed))
-		controller.show_frame(SubscribePage)
+		#controller.show_frame(SubscribePage)
 		if subscribed != 'Timeout':
 			time.sleep(2)
 			controller.show_frame(ChatListPage)
@@ -132,8 +131,6 @@ class ChatListPage(tk.Frame):
 					objChat=item[2]
 			controller.show_frame(ChatPage, objChat=objChat)
 
-		def chatConfig():
-			controller.show_frame(ChatConfigPage, objChatManager=objChatManager)
 		#listaDeChats.bind('<<ListboxSelect>>', goChat)
 		listaDeChats.pack(side = tk.LEFT, fill = tk.BOTH)
 		for items in itemsforlistbox:
@@ -146,7 +143,7 @@ class ChatListPage(tk.Frame):
 		scrollbar.config(command = listaDeChats.yview)
 		
 
-		button3 = tk.Button(self, text="New Chat +", width='10', highlightbackground='#3E4149', bg='#FD8403', relief='raised', fg='black', activebackground='#CB6A02',activeforeground='white', command=chatConfig)
+		button3 = tk.Button(self, text="New Chat +", width='10', highlightbackground='#3E4149', bg='#FD8403', relief='raised', fg='black', activebackground='#CB6A02',activeforeground='white', command=lambda: print("botao"))
 		button3.pack(pady=10)
 
 		button4 = tk.Button(self, text="Go chat!", width='10', highlightbackground='#3E4149', bg='#FD8403', relief='raised', fg='black', activebackground='#CB6A02',activeforeground='white', command=goChat)
@@ -155,8 +152,6 @@ class ChatListPage(tk.Frame):
 class ChatConfigPage(tk.Frame):
 	def __init__(self, parent, controller, chatID=None):
 		tk.Frame.__init__(self, parent)
-		self.ed1 = tk.Entry(self)
-		self.ed1.grid(row=1, column=1, sticky="w")
 
 		#Isso adiciona um label na nossa pagina, o processo é o mesmo pra adicionar outras coisas
 		label = ttk.Label(self, text="Chat Config Page", font=("Verdana", "12"))

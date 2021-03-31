@@ -1,0 +1,1 @@
+{"ChatConnectorConfig": {"username": "caio", "clientIP": "127.0.0.1", "clientPort": 12003, "peerIP": "127.0.0.1", "peerPort": "12004", "serverIP": "127.0.0.1", "serverPort": 12000}, "UDPPeerConfig": {"peerIP": "127.0.0.1", "peerPort": 12005}}
