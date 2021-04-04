@@ -2,6 +2,7 @@ import Chat, json, ChatConnector
 
 class ChatManager:
     def __init__(self, objChatConnector):
+        self.objChatConnector = objChatConnector
         #carrega chats do arquivo
         with open('chatList.json', 'r', encoding='utf-8') as chatList:
             chatList = json.loads(chatList.read())
@@ -14,12 +15,15 @@ class ChatManager:
                                      for chatID in chatList]
 
     def newChat(self, _chatName, _destUsers):
-        newChat = Chat.Chat(chatName=_chatName, destUsers=_destUsers)
+        newChat = Chat.Chat(self.objChatConnector, chatName=_chatName, destUsers=_destUsers)
         self.chatList.append(newChat)
 
+
+
     def addChat(self, _chatName, _destUsers, _chatID):
-        newChat = Chat.Chat(chatName=_chatName, destUsers=_destUsers)
+        newChat = Chat.Chat(self.objChatConnector,chatName=_chatName, destUsers=_destUsers, chatID=_chatID)
         self.chatList.append(newChat)
+
 
     def rmChat(self, ):
         pass

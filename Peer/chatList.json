@@ -1,4 +1,1 @@
-{
-    "0000-0000-0000000": {"chatName": "Test1", "destUsers": ["joao"]},
-    "1234-5678-9101112": {"chatName": "Test2", "destUsers": ["joao","caio"]}
-}
+{"1234-5678-9101112": {"chatName": "Test2", "destUsers": ["joao", "caio"]}, "1e461f8e-f623-4b48-93d6-7b611c99c44c": {"chatName": "bla", "destUsers": ["joao"]}, "85c33e6f-dde9-4371-9f67-f166a154fe62": {"chatName": "outroChat", "destUsers": ["joao", "caio"]}}

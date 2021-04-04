@@ -1,5 +1,5 @@
-import uuid, time, json
-import ChatConnector
+import uuid, time, json, os
+
 
 class Chat:
     def __init__(self, objChatConnector, chatName=None, chatID=None, destUsers=None):
@@ -24,11 +24,15 @@ class Chat:
             self.destUsers = destUsers
 
         self.messageList = [] #lista de jsons
-        with open('messageList.json', 'r') as messageList:
-            messageList = json.loads(messageList.read())
-            for msgNumber in messageList:
-                if messageList[msgNumber]['chatID']==self.chatID:
-                    self.messageList.append(messageList[msgNumber])
+        if not os.path.isfile(self.chatID+'messageList.json'):
+            with open(self.chatID+'messageList.json', 'w') as messageList:
+                pass
+        else:
+            with open(self.chatID+'messageList.json', 'r') as messageList:
+                messageList = json.loads(messageList.read())
+                for message in messageList:
+                    #if messageList[msgNumber]['chatID']==self.chatID:
+                    self.messageList.append(message)
 
         
     def toJson(self):
@@ -47,6 +51,8 @@ class Chat:
             "oriusername":self.objChatConnector.username,
             "msgNumber":len(self.messageList),
             "chatID": self.chatID,
+            "chatName": self.chatName,
+            "destUsers": self.destUsers,
             "senttime": time.strftime('%Y-%m-%d %H:%M:%S', time.localtime()),
             "contenttype": contenttype,
             "content": content
@@ -55,6 +61,8 @@ class Chat:
 
     def addMessage(self, message):
         self.messageList.append(message)
+        with open(self.chatID+'messageList.json', 'w') as messageList:
+            messageList.write(json.dumps(self.messageList))
         print(self.messageList)
 
     def sndMsgToUpload(self, contenttype, content):

@@ -29,11 +29,18 @@ class UDPPeer:
             mensagem = self.peersock.recvfrom(1024)[0].decode('utf-8')
             mensagem = json.loads(mensagem)
             chatID = mensagem['chatID']
+
+            if chatID in [chat.chatID for chat in self.objChatManager.chatList]:
+                pass
+            else:
+                print("Adicionando Chat: ", mensagem['chatName'], mensagem['destUsers'], mensagem['chatID'])
+                self.objChatManager.addChat(mensagem['chatName'], mensagem['destUsers'], mensagem['chatID'])
+                self.objChatManager.saveChatList()
+                
             for chat in self.objChatManager.chatList:
                 if chat.chatID == chatID:
                     chat.addMessage(mensagem)
                     self.updateCurrentChatPage()
-
     def handleReceive(self):
         t  = threading.Thread(target=self.routeMsgToChatObjLoop, args=())
         print("initializing thread for handling the received messages")

@@ -8,6 +8,7 @@ import UDPPeer
 import Chat
 
 objChatConnector = ChatConnector.ChatConnector()
+objChatManager = ChatManager.ChatManager(objChatConnector)
 
 class app(tk.Tk):
 	def __init__(self, *args, **kwargs):
@@ -17,9 +18,7 @@ class app(tk.Tk):
 
 		#Adiciona menubar na aplicação
 		menubar = tk.Menu(self, font=("Verdana", "9"), background="#4682B4",fg='white', activebackground='#011C56', activeforeground='white', tearoff=1)
-		menubar.add_command(label="SubscribePage", command=lambda: self.show_frame(SubscribePage))
-		menubar.add_command(label="ChatListPage", command=lambda: self.show_frame(ChatListPage))
-		menubar.add_command(label="ChatConfigPage", command=lambda: self.show_frame(ChatConfigPage))
+		menubar.add_command(label="ChatListPage", command=lambda: self.show_frame(ChatListPage, objChatManager=objChatManager))
 		menubar.add_command(label="ChatPage", command=lambda: self.show_frame(ChatPage))
 		self.config(menu=menubar)
     
@@ -47,13 +46,20 @@ class app(tk.Tk):
 		self.show_frame(SubscribePage)
 
 	#Traz a pagina que foi adicionada no dicionário ao topo
-	def show_frame(self, page_name, objChat=None):
+	def show_frame(self, page_name, objChat=None, objChatManager=None, objChatConnector=None):
 		frame, geometry = self.frames[page_name]
 		self.update_idletasks()
 		self.geometry(geometry)
 		if objChat:
 			print("Updating chat page with: "+objChat.chatName)
 			frame.setChat(objChat=objChat)
+		if objChatManager:
+			print("Setting objChatManager")
+			frame.setChatManager(objChatManager=objChatManager)
+		if objChatConnector:
+			frame.setChatConnector(objChatConnector=objChatConnector)
+			print("Setting objChatConnector")
+			frame.refreshUsers()
 		frame.tkraise()
 
 class SubscribePage(tk.Frame):					#Essa parte inicia a pagina como um Frame
@@ -101,61 +107,162 @@ class SubscribePage(tk.Frame):					#Essa parte inicia a pagina como um Frame
 		objChatConnector.setConfig(peerPort=_peerPort, username=_username, serverIP=_serverIP)
 		subscribed = objChatConnector.subscribeToServer()
 		self.labelstatus.config(text = str(subscribed))
-		#controller.show_frame(SubscribePage)
+		controller.show_frame(SubscribePage)
 		if subscribed != 'Timeout':
-			time.sleep(2)
+			time.sleep(1)
 			controller.show_frame(ChatListPage)
 
 class ChatListPage(tk.Frame):
 	def __init__(self, parent, controller):
-		global objUDPPeer
-		global objChatManager
 		global objChatConnector
+		global objChatManager
+		global objUDPPeer
 
 		tk.Frame.__init__(self, parent)
 
 		label = tk.Label(self, text="Escolha um chat:", font=("Verdana", "10"))
 		label.pack(pady=12)
 
-		objChatManager = ChatManager.ChatManager(objChatConnector)
-		itemsforlistbox=[(chat.chatName,chat.chatID, chat) for chat in objChatManager.chatList]
-		objUDPPeer = UDPPeer.UDPPeer(objChatManager, objChatConnector)
+		self.objChatManager = objChatManager#ChatManager.ChatManager(objChatConnector)
+		self.itemsforlistbox=[(chat.chatName,chat.chatID, chat) for chat in self.objChatManager.chatList]
+		objUDPPeer = UDPPeer.UDPPeer(self.objChatManager, objChatConnector)
 
-		listaDeChats = tk.Listbox(self)
+		self.listaDeChats = tk.Listbox(self)
 		def goChat():
-			value = str(listaDeChats.get(listaDeChats.curselection()))   
+			value = str(self.listaDeChats.get(self.listaDeChats.curselection()))   
 			label.config(text=value)
 			print(value + " selected!")
-			for item in itemsforlistbox:
+			for item in self.itemsforlistbox:
 				if item[1] == value.split(' / ')[1]:
 					objChat=item[2]
 			controller.show_frame(ChatPage, objChat=objChat)
 
+		def chatConfig():
+			controller.show_frame(ChatConfigPage, objChatManager=self.objChatManager, objChatConnector=objChatConnector)
 		#listaDeChats.bind('<<ListboxSelect>>', goChat)
-		listaDeChats.pack(side = tk.LEFT, fill = tk.BOTH)
-		for items in itemsforlistbox:
-			listaDeChats.insert(tk.END,items[0]+' / '+items[1])
+		self.listaDeChats.pack(side = tk.LEFT, fill = tk.BOTH)
+		for items in self.itemsforlistbox:
+			self.listaDeChats.insert(tk.END,items[0]+' / '+items[1])
 
 		scrollbar = tk.Scrollbar(self)
 		scrollbar.pack(side = tk.LEFT, fill = tk.BOTH)
 
-		listaDeChats.config(yscrollcommand = scrollbar.set) 
-		scrollbar.config(command = listaDeChats.yview)
+		self.listaDeChats.config(yscrollcommand = scrollbar.set) 
+		scrollbar.config(command = self.listaDeChats.yview)
 		
 
-		button3 = tk.Button(self, text="New Chat +", width='10', highlightbackground='#3E4149', bg='#FD8403', relief='raised', fg='black', activebackground='#CB6A02',activeforeground='white', command=lambda: print("botao"))
+		button3 = tk.Button(self, text="New Chat +", width='10', highlightbackground='#3E4149', bg='#FD8403', relief='raised', fg='black', activebackground='#CB6A02',activeforeground='white', command=chatConfig)
 		button3.pack(pady=10)
 
 		button4 = tk.Button(self, text="Go chat!", width='10', highlightbackground='#3E4149', bg='#FD8403', relief='raised', fg='black', activebackground='#CB6A02',activeforeground='white', command=goChat)
 		button4.pack(pady=10)
 
+	def setChatManager(self, objChatManager=None):
+		self.objChatManager = objChatManager
+		if objChatManager:
+			self.refreshChatList()
+			
+
+	def refreshChatList(self):
+		print(self.objChatManager.chatList)
+		self.listaDeChats.delete(0,tk.END)
+		self.itemsforlistbox=[(chat.chatName,chat.chatID, chat) for chat in self.objChatManager.chatList]
+		for items in self.itemsforlistbox:
+			self.listaDeChats.insert(tk.END,items[0]+' / '+items[1])
+		self.objChatManager.saveChatList()
+
 class ChatConfigPage(tk.Frame):
 	def __init__(self, parent, controller, chatID=None):
 		tk.Frame.__init__(self, parent)
+		class Checkbar(tk.Frame):
+			def __init__(self, parent=None, picks=[], side=tk.LEFT, anchor=tk.W):
+				tk.Frame.__init__(self, parent)
+				self.setUsers(picks)
 
+			def state(self):
+				#return map((lambda var: var.get()), self.vars)
+				selecionados = [pick for var,pick in zip(self.vars, self.picks) if var.get()==1]
+				return selecionados
+
+			def setUsers(self, userList):
+				self.picks = userList			
+				self.vars = []
+				for pick in self.picks:
+					var = tk.IntVar()
+					chk = tk.Checkbutton(self, text=pick, variable=var)
+					chk.pack(anchor=tk.W, expand=tk.YES)
+					self.vars.append(var)
+
+
+		#Create Main Frame
+		main_frame = tk.Frame(self)
+		main_frame.pack(fill=tk.BOTH, expand=1)
+
+		#Create a canvas
+		my_canvas = tk.Canvas(main_frame)
+		my_canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=1)
+
+		#Add a scrollbar to the Canvas
+		my_scrollbar = ttk.Scrollbar(main_frame, orient=tk.VERTICAL, command=my_canvas.yview)
+		my_scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+
+		#Configure another frame inside the canvas
+		my_canvas.configure(yscrollcommand=my_scrollbar.set)
+		my_canvas.bind('<Configure>', lambda e: my_canvas.configure(scrollregion=my_canvas.bbox("all")))
+
+		#Create another frame inside the canvas
+		self.checkbar = Checkbar(my_canvas)
 		#Isso adiciona um label na nossa pagina, o processo é o mesmo pra adicionar outras coisas
-		label = ttk.Label(self, text="Chat Config Page", font=("Verdana", "12"))
-		label.grid(row=0, columnspan=2, pady=10)
+		label = ttk.Label(self.checkbar, text="Chat Config Page", font=("Verdana", "12"))
+		label.pack(pady=10)
+
+		self.labelChatName = tk.Label(self.checkbar, text="Chat Name: ")
+		self.labelChatName.pack()
+		self.ed1 = tk.Entry(self.checkbar)
+		self.ed1.pack()
+
+		self.labelSelectUsers = tk.Label(self.checkbar, text="Select users to chat:")
+		self.labelSelectUsers.pack()
+		
+		#add that new fdrame to a new windo
+		my_canvas.create_window((0,0), window=self.checkbar, anchor="nw")
+
+		self.checkbar.setUsers(["user_"+str(option) for option in range(10)])
+
+		def createChat():
+			print("Chat Name:", self.ed1.get())
+			_chatName = self.ed1.get()
+			print("Users: ", self.checkbar.state())
+			_destUsers = self.checkbar.state()
+			if self.objChatConnector.username not in _destUsers:
+				_destUsers.append(self.objChatConnector.username)
+			if _chatName in [chat.chatName for chat in self.objChatManager.chatList]:
+				self.ed1.insert(0, "INVALID CHATNAME!")
+			else:
+				self.objChatManager.newChat( _chatName, _destUsers)
+				for chat in self.objChatManager.chatList:
+					if chat.chatName==_chatName:
+						objChat=chat
+						break
+				controller.show_frame(ChatPage, objChat=objChat)
+
+
+		self.button = tk.Button(self.checkbar, text='Go Chat!', command=createChat).pack()
+
+	def setChatManager(self, objChatManager=None):
+		self.objChatManager=objChatManager
+
+	def setChatConnector(self, objChatConnector=None):
+		self.objChatConnector=objChatConnector
+
+	def refreshUsers(self):
+		for widget in self.checkbar.winfo_children():
+			if widget.winfo_class()=="Checkbutton":
+				widget.destroy()
+		users = self.objChatConnector.getContactDict()
+		userList = [user for user in users]
+		self.checkbar.setUsers(userList)
+
 
 class ChatPage(tk.Frame):
 	def __init__(self, parent, controller):
