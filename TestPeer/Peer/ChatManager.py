@@ -1,18 +1,24 @@
-import Chat, json, ChatConnector
+import Chat, json, ChatConnector, os
 
 class ChatManager:
     def __init__(self, objChatConnector):
         self.objChatConnector = objChatConnector
         #carrega chats do arquivo
-        with open('chatList.json', 'r', encoding='utf-8') as chatList:
-            chatList = json.loads(chatList.read())
+        self.chatList=[]
+        if not os.path.isfile('chatList.json'):
+            with open('chatList.json', 'w') as chatListfile:
+                chatListfile.write("{}")
+        else:
+            with open('chatList.json', 'r', encoding='utf-8') as chatListfile:
+                chatList = json.loads(chatListfile.read())
 
 
         #instancia chats
-        self.chatList = [Chat.Chat(objChatConnector,chatID=chatID,
-                                    chatName=chatList[chatID]['chatName'],
-                                    destUsers=chatList[chatID]['destUsers'])
-                                     for chatID in chatList]
+        if len(self.chatList)>0:
+            self.chatList = [Chat.Chat(objChatConnector,chatID=chatID,
+                                        chatName=chatList[chatID]['chatName'],
+                                        destUsers=chatList[chatID]['destUsers'])
+                                            for chatID in chatList]
 
     def newChat(self, _chatName, _destUsers):
         newChat = Chat.Chat(self.objChatConnector, chatName=_chatName, destUsers=_destUsers)
@@ -23,6 +29,7 @@ class ChatManager:
     def addChat(self, _chatName, _destUsers, _chatID):
         newChat = Chat.Chat(self.objChatConnector,chatName=_chatName, destUsers=_destUsers, chatID=_chatID)
         self.chatList.append(newChat)
+        return newChat
 
 
     def rmChat(self, ):

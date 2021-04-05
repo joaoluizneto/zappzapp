@@ -103,7 +103,7 @@ class SubscribePage(tk.Frame):					#Essa parte inicia a pagina como um Frame
 		_username = self.ed1.get()
 		_serverIP = self.ed2.get()
 		_peerPort = self.ed3.get()
-		print("entries: ",_username, _serverIP, _peerPort)
+		#print("entries: ",_username, _serverIP, _peerPort)
 		objChatConnector.setConfig(peerPort=_peerPort, username=_username, serverIP=_serverIP)
 		subscribed = objChatConnector.subscribeToServer()
 		self.labelstatus.config(text = str(subscribed))
@@ -272,6 +272,7 @@ class ChatPage(tk.Frame):
 		tk.Frame.__init__(self, parent)
 		objUDPPeer.setCurrentChatPage(self)
 		objUDPPeer.handleReceive()
+		objUDPPeer.handleConfirmation()
 
 		self.configure(width = 470, height = 550, bg = "#17202A")
 
@@ -298,15 +299,25 @@ class ChatPage(tk.Frame):
 		self.entryMsg = tk.Entry(self.labelBottom,
                               bg = "#2C3E50",
                               fg = "#EAECEE",
-                              font = ("Verdana", "12"))
-          
-		# place the given widget
-		# into the gui window
+                              font = ("Verdana", "10"))
+
 		self.entryMsg.place(relwidth = 0.74,
-                            relheight = 0.06,
+                            relheight = 0.03,
                             rely = 0.008,
                             relx = 0.011)
+
+		self.entryFile = tk.Entry(self.labelBottom,
+                              bg = "#2C3E50",
+                              fg = "#EAECEE",
+                              font = ("Verdana", "10"))
           
+		self.entryFile.place(relwidth = 0.74,
+                            relheight = 0.03,
+                            rely = 0.04,
+                            relx = 0.011)
+		
+		self.entryFile.insert(0, "./UploadFile/loremipsum.txt")
+
 		self.entryMsg.focus()
 
 		# create a Send Button
@@ -319,9 +330,22 @@ class ChatPage(tk.Frame):
           
 		self.buttonMsg.place(relx = 0.77,
                              rely = 0.008,
-                             relheight = 0.06, 
+                             relheight = 0.03, 
                              relwidth = 0.22)
+		# create a Send Button
+		self.buttonFile = tk.Button(self.labelBottom,
+                                text = "Upload",
+                                font=("Verdana", "12"), 
+                                width = 20,
+                                bg = "#ABB2B9",
+                                command = lambda : self.sendFile(self.entryFile.get()))
           
+		self.buttonFile.place(relx = 0.77,
+                             rely = 0.04,
+                             relheight = 0.03, 
+                             relwidth = 0.22)
+
+
 		self.textCons.config(cursor = "arrow")
           
 		# create a scroll bar
@@ -368,6 +392,16 @@ class ChatPage(tk.Frame):
 		print("Sending message: "+str(msg))
 		objUDPPeer.sendMessage(msg)
 
+	def sendFile(self, path):
+		global objChatConnector
+		global objUDPPeer
+		self.textCons.config(state = tk.DISABLED)
+		self.path=path
+		self.entryMsg.delete(0, tk.END)
+		msg = self.objChat.createMsg('file', "content")
+		msg["filename"]=path.split("/")[len(path.split("/"))-1]
+		print("Sending file: "+str(path))
+		objUDPPeer.handleSndFile(self.objChat, path=path)
 
 app = app()
 #Centraliza app na tela

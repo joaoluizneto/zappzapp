@@ -26,7 +26,7 @@ class Chat:
         self.messageList = [] #lista de jsons
         if not os.path.isfile(self.chatID+'messageList.json'):
             with open(self.chatID+'messageList.json', 'w') as messageList:
-                pass
+                messageList.write("{}")
         else:
             with open(self.chatID+'messageList.json', 'r') as messageList:
                 messageList = json.loads(messageList.read())
@@ -46,7 +46,9 @@ class Chat:
         return jsonChat
 
 
-    def createMsg(self, contenttype, content):
+    def createMsg(self, contenttype, content, msgNumber=None):
+        if msgNumber == None: 
+            msgNumber=len(self.messageList)
         msgDict={
             "oriusername":self.objChatConnector.username,
             "msgNumber":len(self.messageList),
@@ -65,7 +67,4 @@ class Chat:
             messageList.write(json.dumps(self.messageList))
         print(self.messageList)
 
-    def sndMsgToUpload(self, contenttype, content):
-        msgJson = self.createMsg(contenttype, content)
-        return msgJson
 

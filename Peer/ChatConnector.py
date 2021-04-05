@@ -3,6 +3,7 @@ from tkinter.constants import S
 
 class ChatConnector:
     def __init__(self, peerIP=None, peerPort=None, username=None, clientIP=None, clientPort=None, serverIP=None, serverPort=None):
+        self.clientsock=None
         with open('config.json', 'r', encoding='utf-8') as config:
             config = json.loads(config.read())
 
@@ -49,8 +50,8 @@ class ChatConnector:
             self.serverPort = int(serverPort)
 
         with open('config.json', 'w', encoding='utf-8') as saveconfig:
-            print("ChatConnectorConfig: ")
-            print(config)
+            #print("ChatConnectorConfig: ")
+            #print(config)
             config = json.dumps(config)
             saveconfig.write(config)
 
@@ -101,8 +102,8 @@ class ChatConnector:
             self.serverPort = int(serverPort)
 
         with open('config.json', 'w', encoding='utf-8') as saveconfig:
-            print("ChatConnectorConfig: ")
-            print(config)
+            #print("ChatConnectorConfig: ")
+            #print(config)
             config = json.dumps(config)
             saveconfig.write(config)
 
@@ -136,24 +137,27 @@ class ChatConnector:
         except socket.timeout:
             print("subscribe timeout")
             subscribed = "Timeout"
-        print(str(subscribed))
+        #print(str(subscribed))
         return subscribed
         #except:
             #print("Erro ao se conectar com o Servidor de Contatos.")
 
     def getContactDict(self):
-        print('getting contacts... ')
+        if not self.clientsock:
+            self.clientsock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            self.clientsock.bind((self.clientIP, self.clientPort))
+        #print('getting contacts... ')
         requisition = json.dumps(
             {
                 'req':'sendContactList',
                 'arg': None,
                 'usr': self.username
             })
-        print(requisition)
+        #print(requisition)
         self.clientsock.sendto(requisition.encode(),(self.serverIP, self.serverPort))
         message = self.clientsock.recvfrom(1024)[0].decode('utf-8')
         response = json.loads(message)
-        print(response)
+        #print(response)
         return response
 
     def stayConnectedLoop(self):
