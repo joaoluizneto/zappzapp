@@ -36,7 +36,7 @@ class app(tk.Tk):
 		#Dicionário de páginas
 		self.frames = {}
 		#Adiciona as paginas no dicionário para serem usadas pelo show_frame e o tamanho de cada
-		for F, geometry in zip((SubscribePage,ChatListPage, ChatConfigPage, ChatPage),('270x200', '300x200', '300x200', '300x400')):
+		for F, geometry in zip((SubscribePage,ChatListPage, ChatConfigPage, ChatPage),('270x200', '300x200', '400x200', '300x400')):
 			frame = F(container, self)
 
 			self.frames[F] = (frame, geometry)

@@ -19,6 +19,7 @@ class UDPPeer:
 
         #generator
         self.writeToFileGen = None
+        self.genToken = True #available
 
     #set chatPage to update
     def setCurrentChatPage(self, objChatPage):
@@ -59,7 +60,10 @@ class UDPPeer:
             print("Removing confirmated: ", mensagem)
             confirmation = mensagem["confirmation"]
             confkey = list(confirmation.keys())[0]
-            self.confirmedQ.pop(confkey)
+            try:
+                self.confirmedQ.pop(confkey)
+            except KeyError:
+                print(confkey+" already confirmed!")
 
     #updates new messages to each chat
     def routeMsgToChatObjLoop(self):
@@ -80,12 +84,27 @@ class UDPPeer:
 
     def receiveFile(self,message):
         #generator to deal with saving file
-        if self.writeToFileGen:
-            self.writeToFileGen.send(message)
-        else:
-            self.writeToFileGen = self.writeToFile(message)
-            self.writeToFileGen.send(None)
-            self.writeToFileGen.send(message)
+        while True:
+            if self.genToken: #se nõ tem ninguém usndo o gerador
+                self.genToken= False #bloqueia gerador
+                if self.writeToFileGen:
+                    try:
+                        self.writeToFileGen.send(message)
+                    except StopIteration:
+                        print("Stopped writing")
+                        #self.writeToFileGen = self.writeToFile(message)
+                        #self.writeToFileGen.send(None)
+                        #self.writeToFileGen.send(message)
+                        
+                else:
+                    self.writeToFileGen = self.writeToFile(message)
+                    self.writeToFileGen.send(None)
+                    self.writeToFileGen.send(message)
+                self.genToken= True #desblloqueia gerador
+                break
+            else:
+                pass
+
 
     def writeToFile(self, message):
         count=0
@@ -95,16 +114,22 @@ class UDPPeer:
             while True:
                 message = yield
                 if message:
-                    if finish and max(chunks)==(len(chunks)-1):
-                        print(chunks)
-                        break
-                    if message["content"]:
-                        print("Receiving chunck:", message["msgNumber"])
+                    if message["filesize"]>0:
+                        print("Writing chunck:", message["msgNumber"])
                         f.write(message["content"].encode())
-                        count+=1
+                        chunks.append(message["msgNumber"])
                     else:
-                        print("Receiving last chunk")
+                        print("Stoping writing...")
                         finish = True
+                        self.writeToFileGen=None
+                        break
+                        if finish and max(chunks)==(len(chunks)-1):
+                            print(chunks)
+                            print("Parando escrita!")
+                            break
+                        count+=1
+                else:
+                    continue
 
     def getUserAddr(self, username):
         contactDict = self.objChatConnector.getContactDict()
@@ -182,6 +207,7 @@ class UDPPeer:
                     msg = objChat.createMsg('file', "None")
                     msg["filename"]=path.split("/")[len(path.split("/"))-1]
                     msg["content"]=None
+                    msg["filesize"]=0
                     self.sendMessage(msg)
                     break
                 msg = objChat.createMsg('file', "content")
@@ -196,7 +222,7 @@ class UDPPeer:
 
                 self.sendMessage(msg)
                 #print("Sent Msg: ", msg["msgNumber"])
-                time.sleep(0.5)
+                time.sleep(0.2)
                 # update the progress bar
 
         #send message by message showing progress
